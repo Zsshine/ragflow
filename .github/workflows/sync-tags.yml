@@ -1,0 +1,22 @@
+name: Sync Upstream Tags
+on:
+  workflow_dispatch:  # 允许手动点按钮运行
+  schedule:
+    - cron: '0 */6 * * *' # 每6小时自动同步
+
+jobs:
+  sync-tags:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Add upstream remote
+        run: |
+          git remote add upstream https://github.com/infiniflow/ragflow.git
+          git fetch upstream --tags
+
+      - name: Push tags to fork
+        run: git push origin --tags
