@@ -4,6 +4,10 @@ on:
   schedule:
     - cron: '0 */6 * * *' # 每6小时自动同步
 
+# 需要写权限以便用 GITHUB_TOKEN 推送 tag 回 fork
+permissions:
+  contents: write
+
 jobs:
   sync-tags:
     runs-on: ubuntu-latest
@@ -12,11 +16,19 @@ jobs:
         with:
           fetch-depth: 0
           token: ${{ secrets.GITHUB_TOKEN }}
+          persist-credentials: true
 
-      - name: Add upstream remote
+      - name: Configure git
         run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Add upstream remote and fetch tags
+        run: |
+          # 如果已经存在 upstream，先移除以避免失败
+          git remote remove upstream || true
           git remote add upstream https://github.com/infiniflow/ragflow.git
-          git fetch upstream --tags
+          git fetch upstream --tags --force
 
       - name: Push tags to fork
         run: git push origin --tags
